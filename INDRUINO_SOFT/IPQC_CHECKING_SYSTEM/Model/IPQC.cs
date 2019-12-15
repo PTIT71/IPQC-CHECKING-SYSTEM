@@ -24,5 +24,7 @@ namespace IPQC_CHECKING_SYSTEM.Model
         public string CheckingTime { get; set; }
         public string TotalTime { get; set; }
         public string Result { get; set; }
+        public string Status { get; set; }
+
     }
 }
