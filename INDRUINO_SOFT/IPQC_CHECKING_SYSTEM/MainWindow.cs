@@ -89,7 +89,10 @@ namespace IPQC_CHECKING_SYSTEM
                     {
                         IPQC ipItem = new IPQC();
                         ipItem.PartNumber = dataSend.partNumber;
-                        ipItem.Type = "Buy off sample";
+                        if(dataSend.value.Trim() == "1")
+                            ipItem.Type = "Buy off sample";
+                        else if(dataSend.value.Trim() == "2")
+                            ipItem.Type = "Repaired";
                         ipItem.TimeSubmit = getCurrentHourAndMinute();
                         ipItem.Status = Common.STATUS.WAITING;
                         // update online time list source
@@ -121,19 +124,26 @@ namespace IPQC_CHECKING_SYSTEM
                                     break;
                                 case "NG":
                                     {
+                                        lstSource[z].ReleaseTime = getCurrentHourAndMinute();
+                                        lstSource[z].Result = RESULT.NG;
                                         DateTime date1 = DateTime.Parse(lstSource[z].ReleaseTime);
                                         DateTime date2 = DateTime.Parse(lstSource[z].TimeSubmit);
                                         DateTime date3 = DateTime.Parse(lstSource[z].TimeRecive);
-                                        lstSource[z].ReleaseTime = getCurrentHourAndMinute();
-                                        lstSource[z].Result = RESULT.NG;
                                         lstSource[z].CheckingTime = (date1.Subtract(date3)).ToString();
                                         lstSource[z].TotalTime = (date1.Subtract(date2)).ToString();
                                     }
                                     
                                     break;
                                 case "5":
+                                    if(lstSource[z].Type.Trim().Equals("Repaired"))
+                                        lstSource[z].Show = "F";
+                                    else MessageBox.Show("Bạn nhấn sai loại sản phẩm");
                                     break;
                                 case "4":
+                                    if (lstSource[z].Type.Trim().Equals("Buy off sample"))
+                                        lstSource[z].Show = "F";
+                                    else MessageBox.Show("Bạn nhấn sai loại sản phẩm");
+
                                     break;
                                 default:
                                      MessageBox.Show("Value code Error!" + dataSend.value);
@@ -145,7 +155,10 @@ namespace IPQC_CHECKING_SYSTEM
                         {
                             IPQC ipItem = new IPQC();
                             ipItem.PartNumber = dataSend.partNumber;
-                            ipItem.Type = "Buy off sample";
+                            if (dataSend.value.Trim() == "1")
+                                ipItem.Type = "Buy off sample";
+                            else if (dataSend.value.Trim() == "2")
+                                ipItem.Type = "Repaired";
                             ipItem.TimeSubmit = getCurrentHourAndMinute();
                             ipItem.Status = STATUS.WAITING;
                             lstSource.Add(ipItem);
@@ -199,6 +212,84 @@ namespace IPQC_CHECKING_SYSTEM
             xlsSheet["I2"].Value = "Checking Time";
             xlsSheet["J2"].Value = "Total Time";
             xlsSheet["K2"].Value = "Result";
+            xlsSheet["K2"].Value = "Shown";
+            List<string> Y = new List<string>();
+            Y.Add("B");
+            Y.Add("C");
+            Y.Add("D");
+            Y.Add("E");
+            Y.Add("F");
+            Y.Add("G");
+            Y.Add("H");
+            Y.Add("I");
+            Y.Add("J");
+            Y.Add("K");
+            Y.Add("L");
+            int indexs = 3;
+            for (int i = 0; i < lstSource.Count; i++)
+            {
+                for (int j = 0; j < Y.Count; j++)
+                {
+                    switch (j)
+                    {
+                        case 0:
+                            xlsSheet[Y[j] + indexs].Value = lstSource[i].PartNumber;
+                            break;
+                        case 1:
+                            xlsSheet[Y[j] + indexs].Value = lstSource[i].Type;
+                            break;
+                        case 2:
+                            xlsSheet[Y[j] + indexs].Value = lstSource[i].SubmitPIC;
+                            break;
+                        case 3:
+                            xlsSheet[Y[j] + indexs].Value = lstSource[i].IPQC1;
+                            break;
+                        case 4:
+                            xlsSheet[Y[j] + indexs].Value = StandarTime(lstSource[i].TimeSubmit);
+                            break;
+                        case 5:
+                            xlsSheet[Y[j] + indexs].Value = StandarTime(lstSource[i].TimeRecive);
+                            break;
+                        case 6:
+                            xlsSheet[Y[j] + indexs].Value = StandarTime(lstSource[i].ReleaseTime);
+                            break;
+                        case 7:
+                            xlsSheet[Y[j] + indexs].Value = StandarTime(lstSource[i].CheckingTime);
+                            break;
+                        case 8:
+                            xlsSheet[Y[j] + indexs].Value = StandarTime(lstSource[i].TotalTime);
+                            break;
+                        case 9:
+                            xlsSheet[Y[j] + indexs].Value = lstSource[i].Result;
+                            break;
+                        case 10:
+                            xlsSheet[Y[j] + indexs].Value = lstSource[i].Show;
+                            break;
+                    }
+                }
+                indexs++;
+            }
+            xlsxWorkbook.SaveAs("DBB.xlsx");
+            Export();
+        }
+
+        public void Export()
+        {
+            WorkBook xlsxWorkbook = WorkBook.Create(ExcelFileFormat.XLSX);
+            xlsxWorkbook.Metadata.Author = "IronXL";
+
+            WorkSheet xlsSheet = xlsxWorkbook.CreateWorkSheet("main_sheet");
+            xlsSheet["B2"].Value = "PartNumber";
+            xlsSheet["C2"].Value = "Type";
+            xlsSheet["D2"].Value = "Submit P.I.C";
+            xlsSheet["E2"].Value = "IPQC";
+            xlsSheet["F2"].Value = "Time Submit";
+            xlsSheet["G2"].Value = "Time Recive";
+            xlsSheet["H2"].Value = "Release Time";
+            xlsSheet["I2"].Value = "Checking Time";
+            xlsSheet["J2"].Value = "Total Time";
+            xlsSheet["K2"].Value = "Result";
+            xlsSheet["K2"].Value = "Shown";
             List<string> Y = new List<string>();
             Y.Add("B");
             Y.Add("C");
@@ -247,11 +338,12 @@ namespace IPQC_CHECKING_SYSTEM
                         case 9:
                             xlsSheet[Y[j] + indexs].Value = lstSource[i].Result;
                             break;
+                       
                     }
                 }
                 indexs++;
             }
-            xlsxWorkbook.SaveAs("DBB.xlsx");
+            xlsxWorkbook.SaveAs("D:\\DBBS.xlsx");
         }
 
         public List<IPQC> readExcel()
@@ -274,59 +366,63 @@ namespace IPQC_CHECKING_SYSTEM
             int i = 3;
             while(sheet["B" + i].StringValue.Trim().Count()>0)
             {
-                IPQC TempIPQC = new IPQC();
-                for (int j = 0; j < Y.Count; j++)
+                if (sheet["L" + i].StringValue.Trim().Length == 0)
                 {
-                    switch(j)
+                    IPQC TempIPQC = new IPQC();
+                    for (int j = 0; j < Y.Count; j++)
                     {
-                        case 0:
-                            TempIPQC.PartNumber = sheet[Y[j] + i].StringValue.Trim();
-                            break;
-                        case 1:
-                            TempIPQC.Type = sheet[Y[j] + i].StringValue.Trim();
-                            break;
-                        case 2:
-                            TempIPQC.SubmitPIC = sheet[Y[j] + i].StringValue.Trim();
-                            break;
-                        case 3:
-                            TempIPQC.IPQC1 = sheet[Y[j] + i].StringValue.Trim();
-                            break;
-                        case 4:
-                            TempIPQC.TimeSubmit = StandarTime(sheet[Y[j] + i].StringValue.Trim());
-                            break;
-                        case 5:
-                            TempIPQC.TimeRecive = StandarTime(sheet[Y[j] + i].StringValue.Trim());
-                            break;
-                        case 6:
-                            TempIPQC.ReleaseTime = StandarTime(sheet[Y[j] + i].StringValue.Trim());
-                            break;
-                        case 7:
-                            TempIPQC.CheckingTime = StandarTime(sheet[Y[j] + i].StringValue.Trim());
-                            break;
-                        case 8:
-                            TempIPQC.TotalTime = StandarTime(sheet[Y[j] + i].StringValue.Trim());
-                            break;
-                        case 9:
-                            TempIPQC.Result = sheet[Y[j] + i].StringValue.Trim();
-                            break;
+                        switch (j)
+                        {
+                            case 0:
+                                TempIPQC.PartNumber = sheet[Y[j] + i].StringValue.Trim();
+                                break;
+                            case 1:
+                                TempIPQC.Type = sheet[Y[j] + i].StringValue.Trim();
+                                break;
+                            case 2:
+                                TempIPQC.SubmitPIC = sheet[Y[j] + i].StringValue.Trim();
+                                break;
+                            case 3:
+                                TempIPQC.IPQC1 = sheet[Y[j] + i].StringValue.Trim();
+                                break;
+                            case 4:
+                                TempIPQC.TimeSubmit = StandarTime(sheet[Y[j] + i].StringValue.Trim());
+                                break;
+                            case 5:
+                                TempIPQC.TimeRecive = StandarTime(sheet[Y[j] + i].StringValue.Trim());
+                                break;
+                            case 6:
+                                TempIPQC.ReleaseTime = StandarTime(sheet[Y[j] + i].StringValue.Trim());
+                                break;
+                            case 7:
+                                TempIPQC.CheckingTime = StandarTime(sheet[Y[j] + i].StringValue.Trim());
+                                break;
+                            case 8:
+                                TempIPQC.TotalTime = StandarTime(sheet[Y[j] + i].StringValue.Trim());
+                                break;
+                            case 9:
+                                TempIPQC.Result = sheet[Y[j] + i].StringValue.Trim();
+                                break;
+                        }
                     }
-                }
-                if(TempIPQC.Result.Trim().Length>0)
-                {
-                    TempIPQC.Status = STATUS.CHECKED;
-                }
-                else
-                {
-                    if(TempIPQC.TimeRecive.Trim().Length>0)
+                    if (TempIPQC.Result.Trim().Length > 0)
                     {
-                        TempIPQC.Status = STATUS.CHECKING;
+                        TempIPQC.Status = STATUS.CHECKED;
                     }
                     else
                     {
-                        TempIPQC.Status = STATUS.WAITING;
+                        if (TempIPQC.TimeRecive.Trim().Length > 0)
+                        {
+                            TempIPQC.Status = STATUS.CHECKING;
+                        }
+                        else
+                        {
+                            TempIPQC.Status = STATUS.WAITING;
+                        }
                     }
+                    lstIPQC.Add(TempIPQC);
+                   
                 }
-                lstIPQC.Add(TempIPQC);
                 i++;
             }
             workbook.Close();
