@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using IPQC_CHECKING_SYSTEM;
@@ -34,7 +35,13 @@ namespace IPQC_CHECKING_SYSTEM
             }
             if (lstSource.Count <= rowCount)
             {
-                lstView = lstSource;
+                for (int j = 0; j < lstSource.Count; j++)
+                {
+                    if (lstSource[j].isNOTShown == null || lstSource[j].isNOTShown.Trim().Length == 0)
+                    {
+                        lstView = lstSource;
+                    }
+                }
                 index = 0;
                 return;
             }
@@ -56,6 +63,7 @@ namespace IPQC_CHECKING_SYSTEM
         {
             InitializeComponent();
             lstSource = new List<IPQC>();
+            //lstSource = readExcelFile();
             lbl_CurrentDate.Text = "Date: " + DateTime.Now.Day + "/" + DateTime.Now.Month + "/" +DateTime.Now.Year;
         }
         
@@ -156,6 +164,17 @@ namespace IPQC_CHECKING_SYSTEM
                                         compete = DateTime.Parse(date1.Subtract(date2).ToString());
                                         lstSource[z].TotalTime = (compete.Hour * 60 + compete.Minute).ToString();
 
+                                        if (lstSource[z].Type.Equals(TYPE.REPAIR))
+                                        {
+                                            for (int j = 0; j < lstSource.Count; j++)
+                                            {
+                                                if (lstSource[j].PartNumber.Equals(lstSource[z].PartNumber) && lstSource[j].Result.Equals(RESULT.NG))
+                                                {
+                                                    lstSource[j].isNOTShown = "True";
+                                                }
+                                            }
+                                        }
+
                                     }
                                     break;
                                 case BTN.PRESS_NG:
@@ -200,13 +219,12 @@ namespace IPQC_CHECKING_SYSTEM
                             // update online time list source
                             lstSource.Add(ipItem);
                         }
-
                     }
-
                 }
-                WriteExcelFile(lstSource);
+                WriteExcelFile();
             }
-            lstSource = readExcelFile("DATABASE.xlsx");
+            Thread th = new Thread(readExcelFile);
+            th.Start();
             ChangeDisplayData();
 
             dgvData.Refresh();
@@ -314,7 +332,7 @@ namespace IPQC_CHECKING_SYSTEM
             }
         }
 
-        public List<IPQC> readExcelFile(string path)
+        public void readExcelFile()
         {
             List<IPQC> lstIPQC = new List<IPQC>();
             try
@@ -352,8 +370,7 @@ namespace IPQC_CHECKING_SYSTEM
                     string isRepaired   = rowContent.GetValue(1, 12) + "";
                     string isNotShown   = rowContent.GetValue(1, 13) + "";
                     
-                    if(isNotShown.Trim().Length==0)
-                    {
+                    
                         IPQC ipqc = new IPQC();
                         ipqc.PartNumber = partCode;
                         ipqc.Type = type;
@@ -367,6 +384,7 @@ namespace IPQC_CHECKING_SYSTEM
                         ipqc.TotalTime = totalTime.Replace("H", ":"); ;
                         ipqc.Result = result;
                         ipqc.isRepaired = isRepaired;
+                    ipqc.isRepaired = isNotShown;
 
 
                         if (ipqc.Result.Trim().Length > 0)
@@ -393,7 +411,7 @@ namespace IPQC_CHECKING_SYSTEM
                         }
 
                         lstIPQC.Add(ipqc);
-                    }
+                    
                 }
 
                 MyBook.Close(true);
@@ -406,7 +424,7 @@ namespace IPQC_CHECKING_SYSTEM
             {
                 MessageBox.Show("Không thể load dữ liệu");
             }
-            return lstIPQC;
+            lstSource = lstIPQC;
         }
 
         private static void releaseObject(object obj)
@@ -427,7 +445,7 @@ namespace IPQC_CHECKING_SYSTEM
 
         }
 
-        public void WriteExcelFile(List<IPQC> lstIPQC)
+        public void WriteExcelFile()
         {
             try
             {
