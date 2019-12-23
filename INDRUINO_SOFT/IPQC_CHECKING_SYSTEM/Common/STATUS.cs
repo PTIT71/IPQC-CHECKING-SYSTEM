@@ -8,8 +8,10 @@ namespace IPQC_CHECKING_SYSTEM.Common
 {
     class STATUS
     {
-        public static string WAITING = "Waiting";
-        public static string CHECKING = "Checking";
-        public static string CHECKED = "Checked";
+        public readonly static string WAITING = "Waiting";
+        public readonly static string CHECKING = "Checking";
+        public readonly static string CHECKED = "Checked";
+        public readonly static string REPAIR = "Repair";
+        public readonly static string EMPTY = "";
     }
 }

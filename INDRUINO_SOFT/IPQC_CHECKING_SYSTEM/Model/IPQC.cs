@@ -26,6 +26,10 @@ namespace IPQC_CHECKING_SYSTEM.Model
         public string Result { get; set; }
         public string Status { get; set; }
         public string Show { get; set; }
+        public string TimeRepair { get; set; }
+        public string isRepaired { get; set; }
+        public string isNOTShown { get; set; }
+
 
     }
 }
