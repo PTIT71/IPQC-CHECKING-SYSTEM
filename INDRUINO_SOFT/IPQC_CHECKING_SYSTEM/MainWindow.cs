@@ -28,22 +28,11 @@ namespace IPQC_CHECKING_SYSTEM
 
         private void ChangeDisplayData()
         {
-           foreach (var item in lstSource)
-            {
-                if (FillterCondition(item.ReleaseTime) == true)
-                    item.Show = "F";
-            }
             if (lstSource.Count <= rowCount)
             {
-                for (int j = 0; j < lstSource.Count; j++)
-                {
-                    if (lstSource[j].isNOTShown == null || lstSource[j].isNOTShown.Trim().Length == 0)
-                    {
-                        lstView = lstSource;
-                    }
-                }
-                index = 0;
-                return;
+               lstView = lstSource;
+               index = 0;
+               return;
             }
             lstView.Clear();
             int i = index;
@@ -63,31 +52,38 @@ namespace IPQC_CHECKING_SYSTEM
         {
             InitializeComponent();
             lstSource = new List<IPQC>();
-            //lstSource = readExcelFile();
+            readExcelFile();
             lbl_CurrentDate.Text = "Date: " + DateTime.Now.Day + "/" + DateTime.Now.Month + "/" +DateTime.Now.Year;
         }
-        
-        private bool FillterCondition(string time)
+
+        public bool DesDisplay()
         {
+            bool flat = false;
             try
             {
-                if (time == null || time.Length == 0)
-                    return false;
-                time = time.Replace(" ", "");
-                bool result = true;
-                if (TimeSpan.Parse(time) +
-                    TimeSpan.FromMinutes(30) <
-                    TimeSpan.FromHours(DateTime.Now.Hour) +
-                    TimeSpan.FromMinutes(DateTime.Now.Minute)
-                    )
-                    result = false;
-                return result;
+                for (int i = 0; i < lstSource.Count; i++)
+                {
+                    if (lstSource[i].Result != null && lstSource[i].Result.Equals("OK"))
+                    {
+                        DateTime date1 = DateTime.Parse(lstSource[i].ReleaseTime);
+                        string dateTime = DateTime.Now.Hour + ":" + DateTime.Now.Minute;
+                        DateTime date2 = DateTime.Parse(dateTime);
+
+                        DateTime compete = DateTime.Parse(date2.Subtract(date1).ToString());
+                        int total = compete.Hour * 60 + compete.Minute;
+                        if (total >= 2)
+                        {
+                            lstSource[i].isNOTShown = "F";
+                            flat = true;
+                        }
+                    }
+                }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                return false;
+                MessageBox.Show(ex.ToString());
             }
-           
+            return flat;
         }
 
         private void MainWindow_Load(object sender, EventArgs e)
@@ -223,8 +219,15 @@ namespace IPQC_CHECKING_SYSTEM
                 }
                 WriteExcelFile();
             }
-            Thread th = new Thread(readExcelFile);
-            th.Start();
+            else
+            {
+                if (DesDisplay())
+                {
+                    WriteExcelFile();
+                }
+            }
+           // Thread th = new Thread(readExcelFile);
+          //  th.Start();
             ChangeDisplayData();
 
             dgvData.Refresh();
